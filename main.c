@@ -1,9 +1,9 @@
 #include "mrfi.h"
 #include "radios/family1/mrfi_spi.h"
 
-/* 11-21-10
-This is an example of using the ADC to covert a single
-analog input. The external input is to ADC10 channel A4.
+/* 2014-03-07
+This is an example of transmitting data between two RF2500.
+The external input is to ADC10 channel A4.
 This example uses a function to start conversion and
 a separate function get_result that busy-waits for the result.
 */
@@ -44,12 +44,6 @@ void main( void )
   init_adc();
 
   BSP_Init();
-  
-  // Timer initialization
-//  TBCCTL0 |= CCIE;
-//  TBCCR0 = 1000;
-//  TBCTL |= MC_1+TBSSEL_1;
-  //end
   
   P1REN |= 0x04;
   P1IE |= 0x04;  
@@ -115,11 +109,6 @@ void MRFI_RxCompleteISR()
   output[5] = '\n';
   TXString(output, (sizeof output));
 }
-
-//#pragma vector = TIMERB0_VECTOR
-//__interrupt void Timer_B (void)
-//{
-//}
 
 /* basic adc operations */
 void start_conversion(){
