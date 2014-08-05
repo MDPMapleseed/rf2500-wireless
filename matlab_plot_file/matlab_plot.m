@@ -1,3 +1,7 @@
+% This code is used to plot data obtained from RF2500
+% software version is MATLAB 2010b
+% COM# should be adapted correspondingly
+
 s=serial('COM4', 'BaudRate', 9600, 'Parity','none');
 set(s, 'InputBufferSize', 6);
 fopen(s);
