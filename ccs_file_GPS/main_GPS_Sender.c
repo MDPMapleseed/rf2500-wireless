@@ -1,6 +1,8 @@
 //Address 79
 //MAX_APP_PAYLOAD=40
 //MAX_NWK_PAYLOAD=40 (Theoretical Maximum should be 50???)
+//Exclude "virtual_com_cmds.c" for compile
+//Minimum Voltage for the GPS should be 3.3V, otherwise stop working
 
 #include <msp430f2274.h>
 #include "bsp.h"
@@ -17,7 +19,6 @@ static linkID_t sLinkID1;
 static void Link_Init(void);
 
 //UART Initialization function
-//Minimum Voltage for the GPS should be 3.3V, otherwise stop working
 static void UART_Init(void);
 
 //GPS Data processing
@@ -54,7 +55,7 @@ static void Link_Init()
 	unsigned char str[] = "Testing Maximum package = 39 ........\n\r";
 	int i = 0;
 	BSP_TURN_ON_LED1();
-	for (i = 0; i < 5; i++)
+	for (i = 0; i < 2; i++)
 	{
 		NWK_DELAY(100);
 		BSP_TOGGLE_LED1();
@@ -132,7 +133,9 @@ __interrupt void USCI0RX_ISR(void)
 void ProcessingData(void)
 {
 	unsigned char Fg_GPGGA = 1;
+	unsigned char Fg_GPRMC = 1;
 	char GPGGA[] = "GPGGA";
+	char GPRMC[] = "GPRMC";
 	unsigned char i = 0;
 
 	for(i = 0; i < 5; i++)
@@ -141,21 +144,103 @@ void ProcessingData(void)
 		{
 			Fg_GPGGA = 0;
 		}
+		if(!(GPRMC[i] == MSG[i]))
+		{
+			Fg_GPRMC = 0;
+		}
 	}
 
 	if(Fg_GPGGA)
 	{
-		char output[] = "Current Time:\n\rhh:hh\tmm:mm\tss:ss\n\r";
-		output[18] = MSG[6];
-		output[19] = MSG[7];
-		output[24] = MSG[8];
-		output[25] = MSG[9];
-		output[30] = MSG[10];
-		output[31] = MSG[11];
+
+		NWK_DELAY(100);
+
+		char output[] = "Time:\n\rhh:hh\tmm:mm\tss:ss\n\r";
+		output[10] = MSG[6];
+		output[11] = MSG[7];
+		output[16] = MSG[8];
+		output[17] = MSG[9];
+		output[22] = MSG[10];
+		output[23] = MSG[11];
 		SMPL_Send(sLinkID1, output, sizeof(output));
+
+		NWK_DELAY(100);
+
+		char output2[] = "La:aadbb.ccccc'd\n\r";
+		// Latitude
+		output2[3] = MSG[16];
+		output2[4] = MSG[17];
+		output2[6] = MSG[18];
+		output2[7] = MSG[19];
+		output2[9] = MSG[21];
+		output2[10] = MSG[22];
+		output2[11] = MSG[23];
+		output2[12] = MSG[24];
+		output2[13] = MSG[25];
+		output2[15] = MSG[27];
+		SMPL_Send(sLinkID1, output2, sizeof(output2));
+
+		NWK_DELAY(100);
+
+		char output3[] = "Long:aaadbb.ccccc'd\n\r";
+		// Longitude
+		output3[5] = MSG[29];
+		output3[6] = MSG[30];
+		output3[7] = MSG[31];
+		output3[9] = MSG[32];
+		output3[10] = MSG[33];
+		output3[12] = MSG[35];
+		output3[13] = MSG[36];
+		output3[14] = MSG[37];
+		output3[15] = MSG[38];
+		output3[16] = MSG[39];
+		output3[18] = MSG[41];
+		SMPL_Send(sLinkID1, output3, sizeof(output3));
+
+		NWK_DELAY(100);
+
+		char output4[] = "Altitude:aaaaM\n\r";
+		// Altitude
+		output4[9] = MSG[54];
+		output4[10] = MSG[55];
+		output4[11] = MSG[56];
+		output4[12] = MSG[57];
+		SMPL_Send(sLinkID1, output4, sizeof(output4));
+
+		NWK_DELAY(100);
+
+		char output5[] = "S_Used:aa\n\r";
+		// # of satellite used
+		output5[7] = MSG[45];
+		output5[8] = MSG[46];
+		SMPL_Send(sLinkID1, output5, sizeof(output5));
+
+		NWK_DELAY(100);
+
 		// Blink green led after sending msg
 		BSP_TOGGLE_LED1();
 	}
+
+/*	if(Fg_GPRMC)
+	{
+
+		NWK_DELAY(100);
+
+		char output6[] = "Speed:aaabbb\n\r";
+		output6[6] = MSG[45];
+		output6[7] = MSG[46];
+		output6[8] = MSG[47];
+		output6[9] = MSG[48];
+		output6[10] = MSG[49];
+		output6[11] = MSG[50];
+		SMPL_Send(sLinkID1, output6, sizeof(output6));
+
+		NWK_DELAY(100);
+
+		// Blink green led after sending msg
+		BSP_TOGGLE_LED1();
+	}
+	*/
 }
 
 static void Clean_MSG(void)
